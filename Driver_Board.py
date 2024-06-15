@@ -1,5 +1,7 @@
 '''
-Last Edit: 05/26/2023
+Last Edit: 06/14/2024
+
+Added UART functionality for data collection
 
 
 The Following code is for the driver display
@@ -8,6 +10,7 @@ Please make sure to include the following in the lib folder:
 adafruit_display_text
 adafruit_mcp2515
 adafruit_ssd1325.py
+
 
 
 '''
@@ -41,6 +44,9 @@ displayio.release_displays()
 
 # Create the SPI Buss
 spi = busio.SPI(board.GP2, board.GP3, board.GP4)
+
+# create UART bus
+uart = busio.UART(board.GP0, board.GP1, baudrate = 9600)
 
 # Set up the MCP 2515 on the SPI Bus
 can_cs = digitalio.DigitalInOut(board.GP9)
@@ -154,13 +160,18 @@ def send_error(bool,loc):
 error_dick = {'BMS': "BMS Fault",'pico_temp': "Pico Overheat",'DCU_timeout': "it ain't got no gas in it" }
 
 
-
+runtime = time.time()
+sendtime = runtime
 while True:
     #send_error(DCU_timeout < 250000000,'DCU_timeout')
     #send_error(microcontroller.cpu.temperature > 65,'pico_temp')
 
         
     with mcp.listen(timeout=0) as listener:
+        
+        if(time.time() - sendtime > 1):
+            uart.write(struct.pack('<ffffff', mph, voltage, current, heatsink_temp, motor_temp, pico_temp))
+            sendtime = time.time()
         
 
         
