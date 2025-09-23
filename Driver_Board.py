@@ -1,7 +1,7 @@
 '''
-Last Edit: 06/14/2024
+Last Edit: 09/23/2025
 
-Added UART functionality for data collection
+Refactor start up screen draw
 
 
 The Following code is for the driver display
@@ -31,7 +31,12 @@ from adafruit_display_text import label
 import adafruit_mcp2515
 import microcontroller 
 
-
+# Draws element to the screen given its scale, x-position, y-position, and text
+def drawScreenElement(scale, x, y, text):
+    text_group = displayio.Group(scale=scale, x=x, y=y)
+    text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
+    text_group.append(text_area)  # Subgroup for text scaling
+    splash.append(text_group)
 
 current = -1
 lowTemp = 20
@@ -66,8 +71,6 @@ display_bus = displayio.FourWire(spi, command=dc, chip_select=cs, reset=reset, b
 display = adafruit_ssd1325.SSD1325(display_bus, width=WIDTH, height=HEIGHT)
 display.brightness = 1.0
 
-
-
 startTime = time.time()
 # Make the display context
 splash = displayio.Group()
@@ -95,8 +98,6 @@ time.sleep(2.5)
 splash.pop(-1)
 
 
-
-
 tire_diameter = 22
 mph     = 0
 voltage = 0
@@ -107,26 +108,10 @@ motor_temp = 0
 DCU_timeout = 0
 prevDCU_time = time.monotonic_ns()
 
-# Draw Speed/effecency Label
-text_group = displayio.Group(scale=3, x=3, y=12)
-text = "S: {:04.1f}".format(mph)
-text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
-text_group.append(text_area)  # Subgroup for text scaling
-splash.append(text_group)
-
-# Draw Effecency Label
-text_group = displayio.Group(scale=3, x=3, y=41)
-text = "E: {:04.1f}".format(eff)
-text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
-text_group.append(text_area)  # Subgroup for text scaling
-splash.append(text_group)
-
-# Draw voltage/current Label
-text_group = displayio.Group(scale=1, x=15, y=60)
-text = "V: {:04.1f}  A: {:04.1f}".format(voltage,current)
-text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
-text_group.append(text_area)  # Subgroup for text scaling
-splash.append(text_group)
+# Draw Speed, efficiency, voltage/current Label
+drawScreenElement(3, 3, 12, f"S: {mph:04.1f}")
+drawScreenElement(3, 3, 41, f"E: {eff:04.1f}")
+drawScreenElement(1, 15, 60, text = f"V: {voltage:04.1f}  A: {current:04.1f}")
 
 time.sleep(0.2)
 
@@ -244,7 +229,7 @@ while True:
         while not next_message is None:
         
             
-            
+
 
 
 
