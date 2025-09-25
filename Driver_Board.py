@@ -1,8 +1,7 @@
 '''
 Last Edit: 09/25/2025
 
-Refactor code for drawing text to screen into its own individual method
-
+Refactor code for preparing text to draw to the screen into its own individual method
 
 The Following code is for the driver display
 
@@ -30,9 +29,9 @@ from adafruit_display_text import label
 import adafruit_mcp2515
 import microcontroller 
 
-# Draws element to the screen given its scale, x-position, y-position, and text
+# Prepares text to draw to the screen given its scale, x-position, y-position, and text
 # Returns the text_group
-def drawScreenElement(scale, x, y, text):
+def screenDrawTextGroupFactory(scale, x, y, text):
     text_group = displayio.Group(scale=scale, x=x, y=y)
     text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
     text_group.append(text_area)  # Subgroup for text scaling
@@ -85,7 +84,7 @@ splash.append(bg_sprite)
 
 # Draw a label
 text_width = text_area.bounding_box[2] * FONTSCALE
-splash.append(drawScreenElement(FONTSCALE, display.width // 2 - text_width // 2, display.height // 2, "SOLAR CAR ISU"))
+splash.append(screenDrawTextGroupFactory(FONTSCALE, display.width // 2 - text_width // 2, display.height // 2, "SOLAR CAR ISU"))
 time.sleep(2.5)
 splash.pop(-1)
 
@@ -100,9 +99,9 @@ DCU_timeout = 0
 prevDCU_time = time.monotonic_ns()
 
 # Draw Speed, efficiency, voltage/current Label
-splash.append(drawScreenElement(3, 3, 12, f"S: {mph:04.1f}"))
-splash.append(drawScreenElement(3, 3, 41, f"E: {eff:04.1f}"))
-splash.append(drawScreenElement(1, 15, 60, text = f"V: {voltage:04.1f}  A: {current:04.1f}"))
+splash.append(screenDrawTextGroupFactory(3, 3, 12, f"S: {mph:04.1f}"))
+splash.append(screenDrawTextGroupFactory(3, 3, 41, f"E: {eff:04.1f}"))
+splash.append(screenDrawTextGroupFactory(1, 15, 60, text = f"V: {voltage:04.1f}  A: {current:04.1f}"))
 
 time.sleep(0.2)
 
@@ -119,7 +118,7 @@ current_flip = 'ampvolt'
 def send_error(bool,loc):
     if bool:
         # Draw temp/dcu timeout Label
-        splash[-1] = drawScreenElement(1, 15, 60, error_dick[loc])
+        splash[-1] = screenDrawTextGroupFactory(1, 15, 60, error_dick[loc])
         time.sleep(0.5)
     else:
         pass
@@ -151,21 +150,21 @@ while True:
         #print(print_string,end='\t')
         
         # Draw Speed Label
-        splash[-3] = drawScreenElement(3, 3, 12, f'S: {mph:04.1f}')
+        splash[-3] = screenDrawTextGroupFactory(3, 3, 12, f'S: {mph:04.1f}')
 
         # Draw Effecency Label
-        splash[-2] = drawScreenElement(3, 3, 41, f"A: {current:04.1f}")
+        splash[-2] = screenDrawTextGroupFactory(3, 3, 41, f"A: {current:04.1f}")
 
         # flip after 1.25 sec
         if time.monotonic_ns() - flip_time > 1250000000:
             flip_time = time.monotonic_ns()
             if current_flip == 'temp':
                 # Draw voltage/current Label
-                text_group = drawScreenElement(1, 15, 60, f'V: {voltage:04.1f}  PT: {microcontroller.cpu.temperature:04.1f}')
+                text_group = screenDrawTextGroupFactory(1, 15, 60, f'V: {voltage:04.1f}  PT: {microcontroller.cpu.temperature:04.1f}')
                 current_flip = 'ampsvolt'
             else:
                 # Draw temp/dcu timeout Label
-                text_group = drawScreenElement(1, 15, 60, f'MT: {motor_temp:04.1f}  HT: {heatsink_temp:04.1f}')
+                text_group = screenDrawTextGroupFactory(1, 15, 60, f'MT: {motor_temp:04.1f}  HT: {heatsink_temp:04.1f}')
                 current_flip = 'temp'
 
             splash[-1] = text_group
@@ -263,7 +262,7 @@ while True:
 
                 bg_sprite = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
                 splash.append(bg_sprite)
-                splash.append(drawScreenElement(2, 3, 12, "BMS Fault\n"))
+                splash.append(screenDrawTextGroupFactory(2, 3, 12, "BMS Fault\n"))
                 while True:
                     pass
                 
@@ -277,7 +276,7 @@ while True:
                 bg_sprite = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
                 splash.append(bg_sprite)
 
-                splash.append(drawScreenElement(2, 3, 12, "BMS Fault\n"))
+                splash.append(screenDrawTextGroupFactory(2, 3, 12, "BMS Fault\n"))
                 while True:
                     pass
             next_message = listener.receive()            
