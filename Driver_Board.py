@@ -1,7 +1,8 @@
 '''
 Last Edit: 09/25/2025
 
-Refactor code for preparing text to draw to the screen into its own individual method
+Refactor code for drawing text to screen into its own individual method
+
 
 The Following code is for the driver display
 
@@ -29,7 +30,7 @@ from adafruit_display_text import label
 import adafruit_mcp2515
 import microcontroller 
 
-# Prepares text to draw to the screen given its scale, x-position, y-position, and text
+# Draws element to the screen given its scale, x-position, y-position, and text
 # Returns the text_group
 def screenDrawTextGroupFactory(scale, x, y, text):
     text_group = displayio.Group(scale=scale, x=x, y=y)
@@ -160,14 +161,12 @@ while True:
             flip_time = time.monotonic_ns()
             if current_flip == 'temp':
                 # Draw voltage/current Label
-                text_group = screenDrawTextGroupFactory(1, 15, 60, f'V: {voltage:04.1f}  PT: {microcontroller.cpu.temperature:04.1f}')
+                splash[-1] = screenDrawTextGroupFactory(1, 15, 60, f'V: {voltage:04.1f}  PT: {microcontroller.cpu.temperature:04.1f}')
                 current_flip = 'ampsvolt'
             else:
                 # Draw temp/dcu timeout Label
-                text_group = screenDrawTextGroupFactory(1, 15, 60, f'MT: {motor_temp:04.1f}  HT: {heatsink_temp:04.1f}')
+                splash[-1] = screenDrawTextGroupFactory(1, 15, 60, f'MT: {motor_temp:04.1f}  HT: {heatsink_temp:04.1f}')
                 current_flip = 'temp'
-
-            splash[-1] = text_group
 
             
         
