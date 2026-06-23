@@ -29,6 +29,8 @@ import adafruit_mcp2515
 import microcontroller
 import fourwire
 from adafruit_progressbar.verticalprogressbar import VerticalProgressBar, VerticalFillDirection
+from adafruit_progressbar.progressbar import HorizontalProgressBar
+from adafruit_display_shapes.arc import Arc
 
 #--------------Bogus Ahh Initalization stuff--------------------------#
 
@@ -96,13 +98,15 @@ drawtime=time.time()
 time.sleep(0.2)
 
 
+
 #defining some stuff for the progress bars to be used elsewhere.
 
 testValue1 = 0
 
+#for ideal positioning, Position y + Size y = 64 for these to keep them uniform.
 amp_bar = VerticalProgressBar(
-    (30, 33),#position
-    (20, 30),#size
+    (30, 30),#position
+    (20, 34),#size
     bar_color=0xFFFFFF,
     outline_color = 0x000000,
     fill_color = 0x000000,
@@ -111,41 +115,79 @@ amp_bar = VerticalProgressBar(
     value = 0
 )
 
-'''
+
 motor_temp_bar = VerticalProgressBar(
-    (30, 24),#position
-    (20, 38),#size
+    (62, 22),#position
+    (20, 42),#size
     bar_color=0xFFFFFF,
     outline_color = 0x000000,
     fill_color = 0x000000,
     border_thickness = 2,
     margin_size = 0,
-    value = 50
+    value = 0
 )
 
 heat_sink_bar = VerticalProgressBar(
-    (30, 24),#position
-    (20, 38),#size
+    (94, 17),#position
+    (20, 47),#size
     bar_color=0xFFFFFF,
     outline_color = 0x000000,
     fill_color = 0x000000,
     border_thickness = 2,
     margin_size = 0,
-    value = 50
+    value = 0
 )
-'''
+
+
+#The MPH progress bar:
+
+mph_test_value = 0
+
+mph_bar = Arc(
+    x=64,
+    y=64,
+    radius=65,
+    angle=0,
+    direction=180,
+    segments=22,
+    arc_width=16,
+    outline=0x000000,
+    fill=0xFFFFFF
+)
+
+mph_bar2 = HorizontalProgressBar(
+    (61, 2),#position
+    (76, 14),#size
+    bar_color=0xFFFFFF,
+    outline_color = 0x000000,
+    fill_color = 0x000000,
+    border_thickness = 0,
+    margin_size = 0,
+    value = 0
+)
+    
+
+
+
 
 #--------------Screen Drawing--------------------------#
 
 def initScreen():
     global amp_bar
+    global motor_temp_bar
+    global heat_sink_bar
+    global mph_bar
     
     
     splash.append(amp_bar)
+    splash.append(motor_temp_bar)
+    splash.append(heat_sink_bar)
+    splash.append(mph_bar)
+    splash.append(mph_bar2)
     
     
     
-    #keeping old screen code for now, below return
+    #keeping old screen code for now, located below return
     return
     #Draw Odometer Label
     text_group = displayio.Group(scale=1, x=2, y=8)
@@ -179,14 +221,36 @@ def initScreen():
 def drawScreen():
     
     global amp_bar
+    global motor_temp_bar
+    global heat_sink_bar
+    global mph_bar
+    global mph_bar2
     global testValue1
+    global mph_test_value
     
+    display.auto_refresh = False
     
     amp_bar.value = testValue1
-    testValue1 = (testValue1 + 10) % 110
-    print(testValue1)
+    motor_temp_bar.value =  testValue1
+    heat_sink_bar.value = testValue1
     
-    #keeping old screen code for now, below return
+    testValue1 = (testValue1 + 10) % 110
+    print("test: " + str(testValue1))
+    
+    
+    if mph_test_value <= 50:
+        mph_bar.angle = -mph_test_value * 1.75
+        mph_bar2.value = 0
+    else: # above 50, use second bar
+        mph_bar.angle = -50 * 1.75
+        mph_bar2.value = (mph_test_value - 50) * 1.75
+    
+    mph_test_value = (mph_test_value + 10) % 110
+    print("mph: " + str(mph_test_value))
+    
+    #keeping old screen code for now, located below return
+    display.auto_refresh = True
+    
     return
     #Draw odometer label
     text_group = displayio.Group(scale=1, x=2, y=8)
