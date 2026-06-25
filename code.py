@@ -17,14 +17,14 @@ cs.switch_to_output()
 spi = busio.SPI(board.GP2, board.GP3, board.GP4)
 
 #digital reverse init
-reverse = digitalio.DigitalInOut(board.GP22)
+reverse = digitalio.DigitalInOut(board.A1)
 reverse.pull = digitalio.Pull.UP
 
 #Maximum RPM value
 omega = 0
 
 #digital forward init
-forward = digitalio.DigitalInOut(board.A1)
+forward = digitalio.DigitalInOut(board.GP22)
 forward.pull = digitalio.Pull.UP
 
 #digital regen init
@@ -142,15 +142,15 @@ def forward_neutral_reverse_regen(pedal_potentiometer_sum, sample_count):
     
     #reverse selected   
     if not reverse.value:
-        return [-1000, thrust]
+        return [-20000, thrust]
 
     #forward selected
     if not forward.value:
-        return [1000, thrust]
+        return [20000, thrust]
 
     #regen selected
     if not regen.value:
-        return [0, thrust*0.40]
+        return [0, thrust*0.80]
 
     #neutral select
     if  forward.value and reverse.value:
@@ -197,4 +197,5 @@ main()
        
        
      
+
 
