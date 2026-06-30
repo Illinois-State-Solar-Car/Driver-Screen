@@ -1,6 +1,6 @@
 '''
-Last Edit: 05/26/2023
-
+Last Edit: 06/30/26
+By: Jason Bliss for the GUI
 
 The Following code is for the driver display
 
@@ -8,9 +8,17 @@ Please make sure to include the following in the lib folder:
 adafruit_display_text
 adafruit_mcp2515
 adafruit_ssd1325.py
+adafruit_display_shapes
+adafruit_progressbar
 
 
+TODO:
+    Add acurate Min and max values for each bar
+    Maybe Add Odometer Back
+    Make .bmp actually match the bars
+    Connect it with CAN data instead of random test data.
 '''
+
 
 #--------------Imports-------------------------#
 
@@ -70,7 +78,7 @@ startTime = time.time()
 splash = displayio.Group()
 display.root_group = splash
 
-# Startup
+#--------------Displayign the Startup Screen For a Bit--------------------------#
 text = "SOLAR CAR ISU\nDriver Screen"
 text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
 text_width = text_area.bounding_box[2] * FONTSCALE
@@ -83,7 +91,6 @@ text_group.append(text_area)  # Subgroup for text scaling
 splash.append(text_group)
 time.sleep(2.5)
 splash.pop(-1)
-
 
 tire_diameter = 22
 mph     = 0
@@ -99,7 +106,7 @@ drawtime=time.time()
 
 time.sleep(0.2)
 
-#--------------Prograss Bar Initalization--------------#
+#--------------Progress Bar Initalization Items--------------#
 
 #defining some stuff for the progress bars to be used elsewhere, mainly for test code, not running on actual car.
 
@@ -150,7 +157,7 @@ heat_sink_bar = VerticalProgressBar(
 
 
 #The MPH progress bar:
-
+#Broken into two since it's a curved and then a straight section
 mph_bar = Arc(
     x=64,
     y=64,
@@ -176,17 +183,20 @@ mph_bar2 = HorizontalProgressBar(
 
 #warning text
 
-ampWarningLabels = displayio.Group(scale=1, x=2, y=8)
+ampWarningLabels = displayio.Group(scale=1, x=25, y=52)
 ampWarningLabel = label.Label(terminalio.FONT, text="!", color=0xFFFFFF)
 ampWarningLabels.append(ampWarningLabel)  # Subgroup for text scaling
 
-motorWarningLabels = displayio.Group(scale=1, x=2, y=8)
+motorWarningLabels = displayio.Group(scale=1, x=57, y=52)
 motorWarningLabel = label.Label(terminalio.FONT, text="!", color=0xFFFFFF)
 motorWarningLabels.append(motorWarningLabel)  # Subgroup for text scaling
 
-heatsinkWarningLabels = displayio.Group(scale=1, x=2, y=8)
+heatsinkWarningLabels = displayio.Group(scale=1, x=89, y=52)
 heatsinkWarningLabel = label.Label(terminalio.FONT, text="!", color=0xFFFFFF)
-heatsinkWarningLabels.append(heatsinkWarningLabel)  # Subgroup for text scaling
+heatsinkWarningLabels.append(heatsinkWarningLabel)  # Subgroup for text
+
+#Helper variable for flashing the exclamation marks when a value is too high
+warningFlashing = True
     
 
 
@@ -260,13 +270,36 @@ def drawScreen():
     global mph_bar
     global mph_bar2
     
+    global ampWarningLabels
+    global motorWarningLabels
+    global heatsinkWarningLabels
+    global warningFlashing
+    
     global testValue1
     global mph_test_value
     
+    
     #Testing to see if warnings are true
-    ampWarning = IsInNormalRange(testValue1, 0, 12)
-    motorTempWarning = IsInNormalRange(testValue1, 20, 70)
-    heatSinkTempWarning = IsInNormalRange(testValue1, 20, 70)
+    ampWarning = not IsInNormalRange(testValue1, 0, 12)
+    motorTempWarning = not IsInNormalRange(testValue1, 20, 70)
+    heatSinkTempWarning = not IsInNormalRange(testValue1, 20, 70)
+    
+    if ampWarning:
+        ampWarningLabels.hidden = warningFlashing
+    else:
+        ampWarningLabels.hidden = True
+    
+    if motorTempWarning:
+        motorWarningLabels.hidden = warningFlashing
+    else:
+        motorWarningLabels.hidden =True
+        
+    if heatSinkTempWarning:
+        heatsinkWarningLabels.hidden = warningFlashing
+    else:
+        heatsinkWarningLabels.hidden = True
+    
+    warningFlashing = not warningFlashing
     
     mph_test_value = (mph_test_value + 10) % 110
     print("mph: " + str(mph_test_value))
@@ -442,6 +475,7 @@ def main():
 
 main()
     
+
 
 
 
