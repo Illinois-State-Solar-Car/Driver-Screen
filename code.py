@@ -52,35 +52,47 @@ sample_count = 0
 start_time = time.monotonic()#since initalization
 
 #Coil switch
-CoilSwitch = digitalio.DigitalInOut(board.GP25)
+CoilSwitch = digitalio.DigitalInOut(board.GP7)
 CoilSwitch.pull = digitalio.Pull.UP
 
 #Low Gear GP20 #High Gear A3
 
-LowGear = digitalio.DigitalInOut(board.GP20)
-LowGear.direction = digitalio.Direction.OUTPUT
-
-HighGear = digitalio.DigitalInOut(board.A3)
+HighGear = digitalio.DigitalInOut(board.GP20)
 HighGear.direction = digitalio.Direction.OUTPUT
+
+LowGear = digitalio.DigitalInOut(board.A3)
+LowGear.direction = digitalio.Direction.OUTPUT
 
 LowGear.value = True
 HighGear.value = False
 
 IsCoilSwitched = False
+LastCoilSwitchValue = True
+
+Light = digitalio.DigitalInOut(board.GP18)
+Light.direction = digitalio.Direction.OUTPUT
+
+Light.value = False
 
 def swap_coils():
     global IsCoilSwitched
     
     if IsCoilSwitched:
-        LowGear.value = False
-        sleep(0.1)
-        HighGear.value = True
-    else:
+        Light.value = True
         HighGear.value = False
-        sleep(0.1)
+        sleep(0.5)
         LowGear.value = True
-        
+        Light.value = False
+    else:
+        Light.value = True
+        LowGear.value = False
+        sleep(0.5)
+        HighGear.value = True
+        Light.value = False
+
     IsCoilSwitched = not IsCoilSwitched
+
+        
             
 def send_message_over_can(maxrpm, thrust_percentage, IsCoilSwitched):
     '''This function is for sending the message of our calculatd maxrpm and percentage thrust over CAN, also updates our last_send and start_time variables to control how often we send messages'''
@@ -139,18 +151,21 @@ def forward_neutral_reverse_regen(pedal_potentiometer_sum, sample_count):
     thrust = round(thrust,3)
     if thrust <=.01:#dead band on pedal
         thrust = 0
+        
+    #regen selected
+    if not regen.value:
+        Light.value = True
+        return [0, thrust*0.80]
+    else:
+        Light.value = False
+        
+    #forward selected
+    if not forward.value:
+        return [20000, thrust]
     
     #reverse selected   
     if not reverse.value:
         return [-20000, thrust]
-
-    #forward selected
-    if not forward.value:
-        return [20000, thrust]
-
-    #regen selected
-    if not regen.value:
-        return [0, thrust*0.80]
 
     #neutral select
     if  forward.value and reverse.value:
@@ -160,8 +175,15 @@ def forward_neutral_reverse_regen(pedal_potentiometer_sum, sample_count):
     return [0,0]
 
 def coilSwitchButton():
-    if not CoilSwitch.value:
+    #This is logic to detect a single gbutton press, and not continually switch coils while button is held, instead oly doing it w=once per nbutton press.
+    global LastCoilSwitchValue
+    
+    CoilButtonPressed = not CoilSwitch.value
+
+    if CoilButtonPressed and not LastCoilSwitchValue:
         swap_coils()
+    
+    LastCoilSwitchValue = CoilButtonPressed
 
 def main():
     '''main data gathering and then message sending loop.'''
@@ -169,6 +191,7 @@ def main():
         global pedal_potentiometer_sum
         global sample_count
         global IsCoilSwitched
+        global LastCoilSwitchValue
         
         #were summing data here until we actually send a message
         pedal_potentiometer_sum += get_pedal_data()
