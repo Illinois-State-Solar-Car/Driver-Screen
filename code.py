@@ -13,10 +13,8 @@ adafruit_progressbar
 
 
 TODO:
-    Add acurate Min and max values for each bar
     Maybe Add Odometer Back
     Make .bmp actually match the bars
-    Connect it with CAN data instead of random test data.
 '''
 
 
@@ -110,8 +108,8 @@ time.sleep(0.2)
 
 #defining some stuff for the progress bars to be used elsewhere, mainly for test code, not running on actual car.
 
-testValue1 = 0
-mph_test_value = 0
+#testValue1 = 0
+#mph_test_value = 0
 
 
 #Progress bar rendering value variables
@@ -285,11 +283,17 @@ def drawScreen():
     global testValue1
     global mph_test_value
     
+    global odometer
+    global mph
+    global current
+    global motor_temp
+    global heatsink_temp
+    
     
     #Testing to see if warnings are true
-    ampWarning = not IsInNormalRange(testValue1, 0, 50)
-    motorTempWarning = not IsInNormalRange(testValue1, 37, 105)
-    heatSinkTempWarning = not IsInNormalRange(testValue1, 37, 105)
+    ampWarning = not IsInNormalRange(current, 0, 50)
+    motorTempWarning = not IsInNormalRange(motor_temp, 37, 105)
+    heatSinkTempWarning = not IsInNormalRange(heatsink_temp, 37, 105)
     
     if ampWarning:
         ampWarningLabels.hidden = warningFlashing
@@ -308,25 +312,25 @@ def drawScreen():
     
     warningFlashing = not warningFlashing
     
-    mph_test_value = (mph_test_value + 10) % 110
-    print("mph: " + str(mph_test_value))
+    #mph_test_value = (mph_test_value + 10) % 110
+    #print("mph: " + str(mph_test_value))
         
-    testValue1 = (testValue1 + 10) % 110
-    print("test: " + str(testValue1))
+    #testValue1 = (testValue1 + 10) % 110
+    #print("test: " + str(testValue1))
     
     display.auto_refresh = False
     
-    amp_rendered_value = clamp(testValue1, 0, 55)
-    motor_temp_rendered_value = clamp(testValue1, 32, 110)
-    heatsink_temp_rendered_value = clamp(testValue1, 32, 110)
-    mph_rendered_value = clamp(mph_test_value, 0, 70)
+    amp_rendered_value = clamp(current, 0, 55)
+    motor_temp_rendered_value = clamp(motor_temp, 32, 110)
+    heatsink_temp_rendered_value = clamp(heatsink_temp, 32, 110)
+    mph_rendered_value = clamp(mph, 0, 70)
     
     amp_bar.value = amp_rendered_value
     motor_temp_bar.value = motor_temp_rendered_value
     heat_sink_bar.value = heatsink_temp_rendered_value
     
     #more complicated since is composed of two bars combined into one.
-    if mph_test_value <= 50:
+    if mph <= 50:
         mph_bar.angle = -mph_rendered_value * 1.75#magic number to make it look nicer.
         mph_bar2.value = 0
     else: # above 50, use second bar
