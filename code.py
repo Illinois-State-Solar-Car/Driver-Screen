@@ -77,13 +77,13 @@ splash = displayio.Group()
 display.root_group = splash
 
 #--------------Displayign the Startup Screen For a Bit--------------------------#
-text = "SOLAR CAR ISU\nDriver Screen"
+text = "SOLAR CAR ISU\nDriver Screen\n\nYou Just Got Dunham'd"
 text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
 text_width = text_area.bounding_box[2] * FONTSCALE
 text_group = displayio.Group(
     scale=FONTSCALE,
     x=display.width // 2 - text_width // 2,
-    y=display.height // 2,
+    y=int(display.height / 6)
 )
 text_group.append(text_area)  # Subgroup for text scaling
 splash.append(text_group)
