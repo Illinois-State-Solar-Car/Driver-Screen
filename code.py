@@ -129,7 +129,9 @@ amp_bar = VerticalProgressBar(
     fill_color = 0x000000,
     border_thickness = 2,
     margin_size = 0,
-    value = 0
+    value = 0,
+    min_value = 0,
+    max_value = 55
 )
 
 
@@ -141,7 +143,9 @@ motor_temp_bar = VerticalProgressBar(
     fill_color = 0x000000,
     border_thickness = 2,
     margin_size = 0,
-    value = 0
+    value = 70,
+    min_value = 32,
+    max_value = 110
 )
 
 heat_sink_bar = VerticalProgressBar(
@@ -152,7 +156,9 @@ heat_sink_bar = VerticalProgressBar(
     fill_color = 0x000000,
     border_thickness = 2,
     margin_size = 0,
-    value = 0
+    value = 70,
+    min_value = 32,
+    max_value = 110
 )
 
 
@@ -171,14 +177,15 @@ mph_bar = Arc(
 )
 
 mph_bar2 = HorizontalProgressBar(
-    (61, 2),#position
-    (76, 14),#size
+    position=(61, 2),#position
+    size=(330, 14),#size I'm maing absurdly big so that the jump from 50 to 70 fills more
     bar_color=0xFFFFFF,
     outline_color = 0x000000,
     fill_color = 0x000000,
     border_thickness = 0,
     margin_size = 0,
     value = 0
+    
 )
 
 #warning text
@@ -280,9 +287,9 @@ def drawScreen():
     
     
     #Testing to see if warnings are true
-    ampWarning = not IsInNormalRange(testValue1, 0, 12)
-    motorTempWarning = not IsInNormalRange(testValue1, 20, 70)
-    heatSinkTempWarning = not IsInNormalRange(testValue1, 20, 70)
+    ampWarning = not IsInNormalRange(testValue1, 0, 50)
+    motorTempWarning = not IsInNormalRange(testValue1, 37, 105)
+    heatSinkTempWarning = not IsInNormalRange(testValue1, 37, 105)
     
     if ampWarning:
         ampWarningLabels.hidden = warningFlashing
@@ -309,10 +316,10 @@ def drawScreen():
     
     display.auto_refresh = False
     
-    amp_rendered_value = clamp(testValue1, 0, 100)
-    motor_temp_rendered_value = clamp(testValue1, 0, 100)
-    heatsink_temp_rendered_value = clamp(testValue1, 0, 100)
-    mph_rendered_value = clamp(mph_test_value, 0, 100)
+    amp_rendered_value = clamp(testValue1, 0, 55)
+    motor_temp_rendered_value = clamp(testValue1, 32, 110)
+    heatsink_temp_rendered_value = clamp(testValue1, 32, 110)
+    mph_rendered_value = clamp(mph_test_value, 0, 70)
     
     amp_bar.value = amp_rendered_value
     motor_temp_bar.value = motor_temp_rendered_value
@@ -324,7 +331,7 @@ def drawScreen():
         mph_bar2.value = 0
     else: # above 50, use second bar
         mph_bar.angle = -50 * 1.75
-        mph_bar2.value = (mph_test_value - 50) * 1.75
+        mph_bar2.value = mph_rendered_value - 50
 
     
     #keeping old screen code for now, located below return
