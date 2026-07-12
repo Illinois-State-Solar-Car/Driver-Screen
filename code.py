@@ -69,7 +69,7 @@ display_bus = fourwire.FourWire(spi, command=dc, chip_select=cs, reset=reset, ba
 display = adafruit_ssd1325.SSD1325(display_bus, width=WIDTH, height=HEIGHT, rotation=180)
 display.brightness = 1.0
 
-
+coil = False
 
 startTime = time.time()
 # Make the display context
@@ -210,7 +210,7 @@ mphLabel = label.Label(terminalio.FONT, text="0", color=0xFFFFFF)
 mphLabelGroup.append(mphLabel)  # Subgroup for text scaling
 
 #Other Labels
-ampLabelGroup = displayio.Group(scale=1, x=38, y=26)
+ampLabelGroup = displayio.Group(scale=1, x=41, y=26)
 ampLabel = label.Label(terminalio.FONT, text="A", color=0xFFFFFF)
 ampLabelGroup.append(ampLabel)  # Subgroup for text scaling
 
@@ -222,6 +222,9 @@ htLabelGroup = displayio.Group(scale=1, x=97, y=26)
 htLabel = label.Label(terminalio.FONT, text="HT", color=0xFFFFFF)
 htLabelGroup.append(htLabel)  # Subgroup for text scaling
     
+coilSwitchLabelGroup = displayio.Group(scale=1, x=114, y=24)
+coilSwitchLabel = label.Label(terminalio.FONT, text="Hi", color=0xFFFFFF)
+coilSwitchLabelGroup.append(coilSwitchLabel)  # Subgroup for text scaling
 
 
 #--------------Screen Drawing Helper Functions--------------------------#
@@ -257,7 +260,7 @@ def initScreen():
     splash.append(ampLabelGroup)
     splash.append(mtLabelGroup)
     splash.append(htLabelGroup)
-    
+    splash.append(coilSwitchLabelGroup)
     
     
     #keeping old screen code for now, located below return
@@ -315,6 +318,7 @@ def drawScreen():
     
     display.auto_refresh = False
     
+    #mph = 60
     
     #Testing to see if warnings are true
     ampWarning = not IsInNormalRange(current, 0, 50)
@@ -372,7 +376,11 @@ def drawScreen():
         mph_bar.angle = -50 * 1.75
         mph_bar2.value = mph_rendered_value - 50
     
-
+    # code to display Hi or Lo on the screen
+    if coil == False:
+        coilSwitchLabel.text = "Lo"
+    else:
+        coilSwitchLabel.text = "Hi"
     
     #keeping old screen code for now, located below return
     display.auto_refresh = True
@@ -408,7 +416,7 @@ def drawScreen():
     
 def frontcover():
     #Draw Frontfilm over our text
-    bitmap = displayio.OnDiskBitmap("resources/DriverScreen.bmp")
+    bitmap = displayio.OnDiskBitmap("resources/DriverScreen - Copy.bmp")
     bitmap.pixel_shader.make_transparent(0)
     frontfilm = displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader)
     splash.append(frontfilm)
@@ -502,6 +510,9 @@ def canListener():
                 if next_message == 0x401:
                     DCU_timeout = time.monotonic_ns() - prevDCU_time
                     prevDCU_time = time.monotonic_ns()
+                    
+                if next_message == 0x404:
+                    coil = struct.unpack('<B',next_message.data)
                     
                     
                     
