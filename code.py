@@ -66,7 +66,7 @@ BORDER = 0
 FONTSCALE = 1
 
 display_bus = fourwire.FourWire(spi, command=dc, chip_select=cs, reset=reset, baudrate=1000000)
-display = adafruit_ssd1325.SSD1325(display_bus, width=WIDTH, height=HEIGHT)
+display = adafruit_ssd1325.SSD1325(display_bus, width=WIDTH, height=HEIGHT, rotation=180)
 display.brightness = 1.0
 
 
@@ -77,7 +77,7 @@ splash = displayio.Group()
 display.root_group = splash
 
 #--------------Displayign the Startup Screen For a Bit--------------------------#
-text = "SOLAR CAR ISU\nDriver Screen\n\nYou Just Got Dunham'd"
+text = "    SOLAR CAR ISU\n    Driver Screen\n\nYou Just Got Dunham'd"
 text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
 text_width = text_area.bounding_box[2] * FONTSCALE
 text_group = displayio.Group(
@@ -134,8 +134,8 @@ amp_bar = VerticalProgressBar(
 
 
 motor_temp_bar = VerticalProgressBar(
-    (62, 22),#position
-    (20, 42),#size
+    (62, 30),#position
+    (20, 34),#size
     bar_color=0xFFFFFF,
     outline_color = 0x000000,
     fill_color = 0x000000,
@@ -147,8 +147,8 @@ motor_temp_bar = VerticalProgressBar(
 )
 
 heat_sink_bar = VerticalProgressBar(
-    (94, 17),#position
-    (20, 47),#size
+    (94, 30),#position
+    (20, 34),#size
     bar_color=0xFFFFFF,
     outline_color = 0x000000,
     fill_color = 0x000000,
@@ -202,6 +202,25 @@ heatsinkWarningLabels.append(heatsinkWarningLabel)  # Subgroup for text
 
 #Helper variable for flashing the exclamation marks when a value is too high
 warningFlashing = True
+
+
+#MPH label
+mphLabelGroup = displayio.Group(scale=1, x=114, y=8)
+mphLabel = label.Label(terminalio.FONT, text="0", color=0xFFFFFF)
+mphLabelGroup.append(mphLabel)  # Subgroup for text scaling
+
+#Other Labels
+ampLabelGroup = displayio.Group(scale=1, x=38, y=26)
+ampLabel = label.Label(terminalio.FONT, text="A", color=0xFFFFFF)
+ampLabelGroup.append(ampLabel)  # Subgroup for text scaling
+
+mtLabelGroup = displayio.Group(scale=1, x=67, y=26)
+mtLabel = label.Label(terminalio.FONT, text="MT", color=0xFFFFFF)
+mtLabelGroup.append(mtLabel)  # Subgroup for text scaling
+
+htLabelGroup = displayio.Group(scale=1, x=97, y=26)
+htLabel = label.Label(terminalio.FONT, text="HT", color=0xFFFFFF)
+htLabelGroup.append(htLabel)  # Subgroup for text scaling
     
 
 
@@ -233,6 +252,11 @@ def initScreen():
     splash.append(ampWarningLabels)
     splash.append(motorWarningLabels)
     splash.append(heatsinkWarningLabels)
+    
+    splash.append(mphLabelGroup)
+    splash.append(ampLabelGroup)
+    splash.append(mtLabelGroup)
+    splash.append(htLabelGroup)
     
     
     
@@ -289,11 +313,14 @@ def drawScreen():
     global motor_temp
     global heatsink_temp
     
+    display.auto_refresh = False
+    
     
     #Testing to see if warnings are true
     ampWarning = not IsInNormalRange(current, 0, 50)
     motorTempWarning = not IsInNormalRange(motor_temp, 37, 105)
     heatSinkTempWarning = not IsInNormalRange(heatsink_temp, 37, 105)
+    mphWarning = not IsInNormalRange(mph, 0, 70)
     
     if ampWarning:
         ampWarningLabels.hidden = warningFlashing
@@ -309,33 +336,42 @@ def drawScreen():
         heatsinkWarningLabels.hidden = warningFlashing
     else:
         heatsinkWarningLabels.hidden = True
+        
+    if mphWarning:
+        if warningFlashing:
+            mph_bar.fill = 0xFFFFFF
+            mph_bar2.bar_color = 0xFFFFFF
+        else:
+            mph_bar.fill = 0x000000
+            mph_bar2.bar_color = 0x000000
+    else:
+        mph_bar.fill = 0xFFFFFF
+        mph_bar2.bar_color = 0xFFFFFF
     
     warningFlashing = not warningFlashing
     
-    #mph_test_value = (mph_test_value + 10) % 110
-    #print("mph: " + str(mph_test_value))
-        
-    #testValue1 = (testValue1 + 10) % 110
-    #print("test: " + str(testValue1))
-    
-    display.auto_refresh = False
     
     amp_rendered_value = clamp(current, 0, 55)
     motor_temp_rendered_value = clamp(motor_temp, 32, 110)
     heatsink_temp_rendered_value = clamp(heatsink_temp, 32, 110)
-    mph_rendered_value = clamp(mph, 0, 70)
+    mph_rendered_value = clamp(mph, 0, 65)
     
     amp_bar.value = amp_rendered_value
     motor_temp_bar.value = motor_temp_rendered_value
     heat_sink_bar.value = heatsink_temp_rendered_value
     
     #more complicated since is composed of two bars combined into one.
+    
+    mphLabel.text = str(mph)
+    
+    
     if mph <= 50:
         mph_bar.angle = -mph_rendered_value * 1.75#magic number to make it look nicer.
         mph_bar2.value = 0
     else: # above 50, use second bar
         mph_bar.angle = -50 * 1.75
         mph_bar2.value = mph_rendered_value - 50
+    
 
     
     #keeping old screen code for now, located below return
